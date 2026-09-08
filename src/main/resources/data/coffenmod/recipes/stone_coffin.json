@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["CSC", "SRS", " C "],
+  "key": {
+    "C": {"item": "minecraft:cobblestone_slab"},
+    "S": {"item": "minecraft:cobblestone"},
+    "R": {"item": "minecraft:stone"}
+  },
+  "result": {"item": "coffenmod:stone_coffin", "count": 1}
+}

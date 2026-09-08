@@ -1,0 +1,7 @@
+{
+  "ghost_say1": { "sounds": ["coffenmod:ghostsay1"] },
+  "ghost_say2": { "sounds": ["coffenmod:ghostsay2"] },
+  "ghost_say3": { "sounds": ["coffenmod:ghostsay3"] },
+  "ghost_hurt": { "sounds": ["coffenmod:ghosthit"] },
+  "ghost_death": { "sounds": ["coffenmod:ghostkill"] }
+}
