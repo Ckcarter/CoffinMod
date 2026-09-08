@@ -132,7 +132,9 @@ public class CoffinRenderer implements BlockEntityRenderer<CoffinBlockEntity> {
         double centerZ = 0.5D + facing.getStepZ() * corpseOffset;
 
         // Keep the body down inside the coffin cavity.
-        ps.translate(centerX, 0.145D, centerZ);
+        // CORPSE HEIGHT INSIDE COFFIN
+        // Smaller Y = lower corpse. Original was 0.145D.
+        ps.translate(centerX, 0.095D, centerZ);
 
         /*
          * Rotate only around the coffin's center. No directional translations
@@ -173,19 +175,12 @@ public class CoffinRenderer implements BlockEntityRenderer<CoffinBlockEntity> {
         // Motionless corpse pose.
         playerModel.setAllVisible(true);
 
-        // Keep the corpse head attached to the body at the normal vanilla pivot.
-        playerModel.head.x = 0.0F;
-        playerModel.head.y = 0.0F;
-        playerModel.head.z = 0.0F;
         playerModel.head.xRot = 0.0F;
         playerModel.head.yRot = 0.0F;
         playerModel.head.zRot = 0.0F;
-
-        // The outer head/hat layer must use the exact same pivot and rotation.
         playerModel.hat.copyFrom(playerModel.head);
-        playerModel.hat.x = playerModel.head.x;
-        playerModel.hat.y = playerModel.head.y;
-        playerModel.hat.z = playerModel.head.z;
+        // Render only the player's head/hat overlay on the corpse.
+        playerModel.hat.copyFrom(playerModel.head);
         playerModel.hat.visible = true;
 
         playerModel.body.xRot = 0.0F;
@@ -208,69 +203,61 @@ public class CoffinRenderer implements BlockEntityRenderer<CoffinBlockEntity> {
 
         ResourceLocation skin = skin(be.getOwnerName());
 
-        var skinBuffer = buffers.getBuffer(RenderType.entityCutoutNoCull(skin));
+                // Place the outer head/hat layer directly on the corpse head.
+        playerModel.hat.copyFrom(playerModel.head);
+        playerModel.hat.x = playerModel.head.x;
+        playerModel.hat.y = playerModel.head.y;
+        playerModel.hat.z = playerModel.head.z;
+        playerModel.hat.xRot = playerModel.head.xRot;
+        playerModel.hat.yRot = playerModel.head.yRot;
+        playerModel.hat.zRot = playerModel.head.zRot;
+        playerModel.hat.visible = true;
 
-        // Render the normal corpse model first.
-        playerModel.renderToBuffer(
+        playerModel.hat.visible = false;
+
+playerModel.renderToBuffer(
                 ps,
-                skinBuffer,
+                buffers.getBuffer(RenderType.entityCutoutNoCull(skin)),
                 packedLight,
                 OverlayTexture.NO_OVERLAY,
                 1.0F, 1.0F, 1.0F, 1.0F
         );
 
-        /*
-         * Align ALL outer player skin layers to the exact corpse pose.
-         * Each outer layer copies the transform of its matching base part.
-         */
-        // Re-sync hat to the final head transform immediately before overlay rendering.
+        // ===== CORPSE HAT / OUTER HEAD LAYER CONTROLS =====
+        // The normal model render above has the hat disabled so this renders ONCE.
         playerModel.hat.copyFrom(playerModel.head);
-        playerModel.jacket.copyFrom(playerModel.body);
-        playerModel.leftSleeve.copyFrom(playerModel.leftArm);
-        playerModel.rightSleeve.copyFrom(playerModel.rightArm);
-        playerModel.leftPants.copyFrom(playerModel.leftLeg);
-        playerModel.rightPants.copyFrom(playerModel.rightLeg);
-
         playerModel.hat.visible = true;
-        playerModel.jacket.visible = true;
-        playerModel.leftSleeve.visible = true;
-        playerModel.rightSleeve.visible = true;
-        playerModel.leftPants.visible = true;
-        playerModel.rightPants.visible = true;
 
-        /*
-         * Render the outer layers explicitly so every overlay stays lined up
-         * with the corpse body, even when the normal PlayerModel pass skips one.
-         */
+        final float hatOffsetX = 0.0F;   // left / right
+        final float hatOffsetY = 0.76F;   // move hat toward corpse feet   // forward / back
+        final float hatOffsetZ = -0.02F;  // higher on corpse
+        final float hatScale   = 0.80F;  // outer-layer size
+
+        ps.pushPose();
+
+        // Move only the hat/outer head layer.
+        ps.translate(hatOffsetX, hatOffsetY, hatOffsetZ);
+
+        // Scale around the hat/head pivot so it remains centered.
+        float hatPivotX = playerModel.hat.x / 16.0F;
+        float hatPivotY = playerModel.hat.y / 16.0F;
+        float hatPivotZ = playerModel.hat.z / 16.0F;
+
+        ps.translate(hatPivotX, hatPivotY, hatPivotZ);
+        ps.scale(hatScale, hatScale, hatScale);
+        ps.translate(-hatPivotX, -hatPivotY, -hatPivotZ);
+
         playerModel.hat.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
+                ps,
+                buffers.getBuffer(RenderType.entityCutoutNoCull(skin)),
+                packedLight,
+                OverlayTexture.NO_OVERLAY,
                 1.0F, 1.0F, 1.0F, 1.0F
         );
 
-        playerModel.jacket.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
-                1.0F, 1.0F, 1.0F, 1.0F
-        );
+        ps.popPose();
+        playerModel.hat.visible = false;
 
-        playerModel.leftSleeve.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
-                1.0F, 1.0F, 1.0F, 1.0F
-        );
-
-        playerModel.rightSleeve.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
-                1.0F, 1.0F, 1.0F, 1.0F
-        );
-
-        playerModel.leftPants.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
-                1.0F, 1.0F, 1.0F, 1.0F
-        );
-
-        playerModel.rightPants.render(
-                ps, skinBuffer, packedLight, OverlayTexture.NO_OVERLAY,
-                1.0F, 1.0F, 1.0F, 1.0F
-        );
 
         ps.popPose();
     }
