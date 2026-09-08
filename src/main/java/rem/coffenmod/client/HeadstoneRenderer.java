@@ -39,7 +39,6 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
          * Text layout:
          *
          * R.I.P.
-         * PlayerName
          * Fell from a high
          * place while trying
          * to escape the
@@ -50,13 +49,13 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
          */
         List<String> lines = new ArrayList<>();
         lines.add("R.I.P.");
-        lines.add(be.getPlayerName().isBlank() ? "Unknown" : be.getPlayerName());
 
-        // 88 font pixels fits nicely across this wider headstone.
+        // Do not display the player name under R.I.P.
+        // Use the freed line for one more wrapped death-reason line.
         lines.addAll(wrapToPixelWidth(
                 be.getDeathReason(),
-                88,
-                4
+                82,
+                5
         ));
 
         ps.pushPose();
@@ -128,72 +127,54 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
     /**
      * Wrap by actual Minecraft font pixel width instead of raw character count.
-     * This keeps every line physically inside the headstone face.
+     * Long words are continued onto the next line instead of being discarded.
      */
     private List<String> wrapToPixelWidth(String text, int maxPixelWidth, int maxLines) {
         List<String> result = new ArrayList<>();
 
         String remaining = (text == null || text.isBlank())
                 ? "Unknown cause"
-                : text.trim();
+                : text.trim().replaceAll("\\s+", " ");
 
         while (!remaining.isEmpty() && result.size() < maxLines) {
-
-            // If the rest already fits, use it as the final line.
             if (font.width(remaining) <= maxPixelWidth) {
                 result.add(remaining);
-                remaining = "";
                 break;
             }
 
-            String[] words = remaining.split("\\s+");
-            StringBuilder line = new StringBuilder();
-            int consumedWords = 0;
+            int bestBreak = -1;
+            int lastSpace = -1;
 
-            for (String word : words) {
-                String candidate = line.length() == 0
-                        ? word
-                        : line + " " + word;
+            // Find the longest prefix that physically fits on the stone.
+            for (int i = 1; i <= remaining.length(); i++) {
+                String candidate = remaining.substring(0, i);
 
                 if (font.width(candidate) > maxPixelWidth) {
                     break;
                 }
 
-                line.setLength(0);
-                line.append(candidate);
-                consumedWords++;
-            }
-
-            // Very long single word: trim it until it fits.
-            if (consumedWords == 0) {
-                String word = words[0];
-                String fitted = word;
-
-                while (!fitted.isEmpty() && font.width(fitted + "...") > maxPixelWidth) {
-                    fitted = fitted.substring(0, fitted.length() - 1);
+                bestBreak = i;
+                if (Character.isWhitespace(remaining.charAt(i - 1))) {
+                    lastSpace = i - 1;
                 }
-
-                result.add(fitted + "...");
-
-                remaining = remaining.substring(
-                        Math.min(word.length(), remaining.length())
-                ).trim();
-                continue;
             }
 
-            result.add(line.toString());
-
-            // Remove the words we just consumed.
-            StringBuilder rest = new StringBuilder();
-            for (int i = consumedWords; i < words.length; i++) {
-                if (rest.length() > 0) rest.append(' ');
-                rest.append(words[i]);
+            // Prefer wrapping at a word boundary. If one word itself is too
+            // wide, split that word across lines instead of truncating it.
+            int breakAt = lastSpace > 0 ? lastSpace : bestBreak;
+            if (breakAt <= 0) {
+                breakAt = 1;
             }
 
-            remaining = rest.toString();
+            String line = remaining.substring(0, breakAt).trim();
+            if (!line.isEmpty()) {
+                result.add(line);
+            }
+
+            remaining = remaining.substring(breakAt).trim();
         }
 
-        // If text remains after maxLines, add an ellipsis to the last line.
+        // If the reason still does not fit, mark the final visible line.
         if (!remaining.isEmpty() && !result.isEmpty()) {
             int lastIndex = result.size() - 1;
             String last = result.get(lastIndex);
@@ -207,4 +188,5 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
         return result;
     }
+
 }
