@@ -58,6 +58,7 @@ public class CoffinEvents {
             coffin.setCoffinType(type);
             coffin.setSpawnGhost(false);
             coffin.setStoredDrops(event.getDrops());
+            coffin.addPlayerHead(player.getGameProfile().getName());
             coffin.setChanged();
         }
 

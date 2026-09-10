@@ -229,9 +229,9 @@ playerModel.renderToBuffer(
         playerModel.hat.visible = true;
 
         final float hatOffsetX = 0.0F;   // left / right
-        final float hatOffsetY = 0.76F;   // move hat toward corpse feet   // forward / back
-        final float hatOffsetZ = -0.02F;  // higher on corpse
-        final float hatScale   = 0.80F;  // outer-layer size
+        final float hatOffsetY = 0.75F;   // move hat toward corpse feet   // forward / back
+        final float hatOffsetZ = 0.02F;  // higher on corpse
+        final float hatScale   = 0.75F;  // outer-layer size
 
         ps.pushPose();
 

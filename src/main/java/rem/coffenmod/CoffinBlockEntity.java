@@ -15,6 +15,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -25,7 +26,7 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
     private String ownerName = "";
     private boolean spawnGhost = false;
     private int coffinType;
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize(27, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> inventory = NonNullList.withSize(36, ItemStack.EMPTY);
 
     // Original 1.7.10 TESR animation state.
     public boolean closed = false; // false = lid shut; true = opening/open, matching old field behavior
@@ -44,6 +45,29 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
     public int getCoffinType() { return coffinType; }
     public void setCoffinType(int coffinType) { this.coffinType = coffinType; sync(); }
     public NonNullList<ItemStack> getInventory() { return inventory; }
+
+    /**
+     * Adds the dead player's head to the coffin inventory.
+     *
+     * The SkullOwner tag stores the player's profile name. Minecraft resolves
+     * the player's skin for the head item, including the outer head/hat layer.
+     */
+    public void addPlayerHead(String playerName) {
+        if (playerName == null || playerName.isBlank()) {
+            return;
+        }
+
+        ItemStack head = new ItemStack(Items.PLAYER_HEAD);
+        head.getOrCreateTag().putString("SkullOwner", playerName);
+
+        for (int i = 0; i < inventory.size(); i++) {
+            if (inventory.get(i).isEmpty()) {
+                inventory.set(i, head);
+                sync();
+                return;
+            }
+        }
+    }
 
     public void setStoredDrops(java.util.Collection<net.minecraft.world.entity.item.ItemEntity> drops) {
         clearContent();
