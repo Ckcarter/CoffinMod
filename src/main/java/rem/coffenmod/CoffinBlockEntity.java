@@ -1,8 +1,11 @@
 package rem.coffenmod;
 
+import com.mojang.authlib.GameProfile;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
@@ -24,6 +27,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class CoffinBlockEntity extends BlockEntity implements Container {
     private String ownerName = "";
+    private GameProfile ownerProfile;
     private boolean spawnGhost = false;
     private int coffinType;
     private final NonNullList<ItemStack> inventory = NonNullList.withSize(36, ItemStack.EMPTY);
@@ -39,7 +43,22 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
 
     public CoffinBlockEntity(BlockPos pos, BlockState state) { super(Coffenmod.COFFIN_BLOCK_ENTITY.get(), pos, state); }
     public String getOwnerName() { return ownerName; }
-    public void setOwnerName(String ownerName) { this.ownerName = ownerName == null ? "" : ownerName; sync(); }
+
+    public GameProfile getOwnerProfile() {
+        return ownerProfile;
+    }
+
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName == null ? "" : ownerName;
+        this.ownerProfile = null;
+        sync();
+    }
+
+    public void setOwnerProfile(GameProfile profile) {
+        this.ownerProfile = profile;
+        this.ownerName = profile == null || profile.getName() == null ? "" : profile.getName();
+        sync();
+    }
     public boolean shouldSpawnGhost() { return false; }
     public void setSpawnGhost(boolean spawnGhost) { this.spawnGhost = false; sync(); }
     public int getCoffinType() { return coffinType; }
@@ -325,7 +344,13 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
 
     @Override protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.putString("Pname", ownerName); tag.putBoolean("spawnGhost", false); tag.putInt("type", coffinType);
+        tag.putString("Pname", ownerName);
+        if (ownerProfile != null) {
+            CompoundTag profileTag = new CompoundTag();
+            NbtUtils.writeGameProfile(profileTag, ownerProfile);
+            tag.put("OwnerProfile", profileTag);
+        }
+        tag.putBoolean("spawnGhost", false); tag.putInt("type", coffinType);
         tag.putBoolean("closed", closed); tag.putFloat("rot", rot); tag.putFloat("pos", pos); tag.putFloat("posY", posY); tag.putInt("openDir", openDir);
         ListTag list = new ListTag();
         for (int i=0;i<inventory.size();i++) { CompoundTag item = new CompoundTag(); item.putByte("Slot", (byte)i); inventory.get(i).save(item); list.add(item); }
@@ -335,6 +360,9 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
     @Override public void load(CompoundTag tag) {
         super.load(tag);
         ownerName = tag.contains("Pname") ? tag.getString("Pname") : tag.getString("Owner");
+        ownerProfile = tag.contains("OwnerProfile", Tag.TAG_COMPOUND)
+                ? NbtUtils.readGameProfile(tag.getCompound("OwnerProfile"))
+                : null;
         spawnGhost = false; coffinType = tag.contains("type") ? tag.getInt("type") : tag.getInt("Type");
         closed = tag.getBoolean("closed"); rot = tag.getFloat("rot"); pos = tag.contains("pos") ? tag.getFloat("pos") : -3F; posY = tag.contains("posY") ? tag.getFloat("posY") : -1F; openDir = tag.getInt("openDir");
         clearContent();

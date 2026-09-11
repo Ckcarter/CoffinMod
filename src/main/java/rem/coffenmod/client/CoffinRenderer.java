@@ -1,5 +1,7 @@
 package rem.coffenmod.client;
 
+import com.mojang.authlib.GameProfile;
+
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -201,7 +203,7 @@ public class CoffinRenderer implements BlockEntityRenderer<CoffinBlockEntity> {
         playerModel.leftLeg.yRot = 0.0F;
         playerModel.leftLeg.zRot = 0.0F;
 
-        ResourceLocation skin = skin(be.getOwnerName());
+        ResourceLocation skin = skin(be);
 
                 // Place the outer head/hat layer directly on the corpse head.
         playerModel.hat.copyFrom(playerModel.head);
@@ -262,14 +264,34 @@ playerModel.renderToBuffer(
         ps.popPose();
     }
 
-    private ResourceLocation skin(String name) {
+    private ResourceLocation skin(CoffinBlockEntity be) {
+        GameProfile profile = be.getOwnerProfile();
+
+        if (profile != null) {
+            /*
+             * The profile already contains UUID + Mojang texture properties
+             * resolved by the server. SkinManager can therefore load the real
+             * skin even when that player is not currently online/in the tab list.
+             */
+            return Minecraft.getInstance()
+                    .getSkinManager()
+                    .getInsecureSkinLocation(profile);
+        }
+
+        String name = be.getOwnerName();
+
+        // Compatibility for old coffins that only saved a name.
         var connection = Minecraft.getInstance().getConnection();
         if (connection != null) {
             var info = connection.getPlayerInfo(name);
-            if (info != null) return info.getSkinLocation();
+            if (info != null) {
+                return info.getSkinLocation();
+            }
         }
 
-        UUID id = UUID.nameUUIDFromBytes(("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8));
+        UUID id = UUID.nameUUIDFromBytes(
+                ("OfflinePlayer:" + name).getBytes(StandardCharsets.UTF_8)
+        );
         return DefaultPlayerSkin.getDefaultSkin(id);
     }
 }

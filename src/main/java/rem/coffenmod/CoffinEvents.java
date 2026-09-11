@@ -54,7 +54,7 @@ public class CoffinEvents {
         level.setBlock(coffinHead, footState.setValue(CoffinBlock.PART, CoffinPart.HEAD), 3);
 
         if (level.getBlockEntity(coffinFoot) instanceof CoffinBlockEntity coffin) {
-            coffin.setOwnerName(player.getGameProfile().getName());
+            coffin.setOwnerProfile(player.getGameProfile());
             coffin.setCoffinType(type);
             coffin.setSpawnGhost(false);
             coffin.setStoredDrops(event.getDrops());
