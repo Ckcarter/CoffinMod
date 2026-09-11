@@ -42,7 +42,7 @@ public class Coffenmod {
     public static final RegistryObject<Block> HEADSTONE = BLOCKS.register("headstone", () ->
             new HeadstoneBlock(
                     BlockBehaviour.Properties.of()
-                            .mapColor(MapColor.SNOW)
+                            .mapColor(MapColor.STONE)
                             .strength(2.0F, 6.0F)
                             .sound(SoundType.STONE)
                             .noOcclusion()

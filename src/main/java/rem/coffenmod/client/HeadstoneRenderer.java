@@ -2,12 +2,15 @@ package rem.coffenmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
+import net.minecraft.world.item.BlockItem;
 import rem.coffenmod.HeadstoneBlock;
 import rem.coffenmod.HeadstoneBlockEntity;
 
@@ -35,23 +38,8 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
         Direction facing = be.getBlockState().getValue(HeadstoneBlock.FACING);
 
-        /*
-         * Text layout:
-         *
-         * R.I.P.
-         * Fell from a high
-         * place while trying
-         * to escape the
-         * skeletons.
-         *
-         * The death reason wraps by PIXEL WIDTH, not character count,
-         * so wide letters and narrow letters both fit correctly.
-         */
         List<String> lines = new ArrayList<>();
         lines.add("R.I.P.");
-
-        // Do not display the player name under R.I.P.
-        // Use the freed line for one more wrapped death-reason line.
         lines.addAll(wrapToPixelWidth(
                 be.getDeathReason(),
                 82,
@@ -60,57 +48,41 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
         ps.pushPose();
 
-        /*
-         * Put text directly on the actual visible face of the stone.
-         * These coordinates match the current 6px-thick headstone model.
-         */
         switch (facing) {
             case NORTH -> {
-                // Base headstone model faces NORTH, so no Y rotation is needed.
-                ps.translate(0.5D, 1.13D, 0.3115D);
+                ps.translate(0.5D, 1.005D, 0.3115D);
                 ps.mulPose(Axis.YP.rotationDegrees(0.0F));
             }
             case SOUTH -> {
-                // SOUTH is the NORTH-facing text plane rotated 180 degrees.
-                ps.translate(0.5D, 1.13D, 0.6885D);
+                ps.translate(0.5D, 1.005D, 0.6885D);
                 ps.mulPose(Axis.YP.rotationDegrees(180.0F));
             }
             case WEST -> {
-                ps.translate(0.3115D, 1.13D, 0.5D);
+                ps.translate(0.3115D, 1.005D, 0.5D);
                 ps.mulPose(Axis.YP.rotationDegrees(90.0F));
             }
             case EAST -> {
-                ps.translate(0.6885D, 1.13D, 0.5D);
+                ps.translate(0.6885D, 1.005D, 0.5D);
                 ps.mulPose(Axis.YP.rotationDegrees(-90.0F));
             }
             default -> {
-                ps.translate(0.5D, 1.13D, 0.3115D);
-                ps.mulPose(Axis.YP.rotationDegrees(0.0F));
+                ps.translate(0.5D, 1.005D, 0.3115D);
             }
         }
 
-        /*
-         * Small enough for multiple wrapped lines, but still readable.
-         * Increase this slightly later if you want larger letters.
-         */
         float textScale = 0.0090F;
         ps.scale(-textScale, -textScale, textScale);
 
         float lineHeight = 10.0F;
-
-        // Center the whole inscription vertically on the upper stone face.
         float startY = -((lines.size() - 1) * lineHeight) / 2.0F;
 
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
 
-            float x = -font.width(line) / 2.0F;
-            float y = startY + (i * lineHeight);
-
             font.drawInBatch(
                     line,
-                    x,
-                    y,
+                    -font.width(line) / 2.0F,
+                    startY + (i * lineHeight),
                     0xFFFFFFFF,
                     false,
                     ps.last().pose(),
@@ -123,12 +95,58 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
         ps.popPose();
 
+        renderFlower(be, facing, buffers, packedLight);
     }
 
-    /**
-     * Wrap by actual Minecraft font pixel width instead of raw character count.
-     * Long words are continued onto the next line instead of being discarded.
-     */
+    private void renderFlower(HeadstoneBlockEntity be,
+                              Direction facing,
+                              MultiBufferSource buffers,
+                              int packedLight) {
+
+        if (be.getFlower().isEmpty()) {
+            return;
+        }
+
+        if (!(be.getFlower().getItem() instanceof BlockItem blockItem)) {
+            return;
+        }
+
+        PoseStack ps = new PoseStack();
+
+        /*
+         * FLOWER POSITION
+         *
+         * Put the flower clearly OUTSIDE the cobblestone face.
+         * The headstone is about 6px thick, so these coordinates are
+         * deliberately farther out than the lettering plane.
+         */
+        switch (facing) {
+            case NORTH -> ps.translate(0.5D, 0.12D, 0.245D);
+            case SOUTH -> ps.translate(0.5D, 0.12D, 0.755D);
+            case WEST  -> ps.translate(0.245D, 0.12D, 0.5D);
+            case EAST  -> ps.translate(0.755D, 0.12D, 0.5D);
+            default    -> ps.translate(0.5D, 0.12D, 0.245D);
+        }
+
+        /*
+         * renderSingleBlock renders block geometry from 0..1 coordinates.
+         * Center that geometry on our attachment point before scaling.
+         */
+        final float flowerScale = 0.60F;
+        ps.scale(flowerScale, flowerScale, flowerScale);
+        ps.translate(-0.5D, 0.0D, -0.5D);
+
+        Minecraft.getInstance()
+                .getBlockRenderer()
+                .renderSingleBlock(
+                        blockItem.getBlock().defaultBlockState(),
+                        ps,
+                        buffers,
+                        LightTexture.FULL_BRIGHT,
+                        OverlayTexture.NO_OVERLAY
+                );
+    }
+
     private List<String> wrapToPixelWidth(String text, int maxPixelWidth, int maxLines) {
         List<String> result = new ArrayList<>();
 
@@ -139,13 +157,13 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
         while (!remaining.isEmpty() && result.size() < maxLines) {
             if (font.width(remaining) <= maxPixelWidth) {
                 result.add(remaining);
+                remaining = "";
                 break;
             }
 
             int bestBreak = -1;
             int lastSpace = -1;
 
-            // Find the longest prefix that physically fits on the stone.
             for (int i = 1; i <= remaining.length(); i++) {
                 String candidate = remaining.substring(0, i);
 
@@ -154,13 +172,12 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
                 }
 
                 bestBreak = i;
+
                 if (Character.isWhitespace(remaining.charAt(i - 1))) {
                     lastSpace = i - 1;
                 }
             }
 
-            // Prefer wrapping at a word boundary. If one word itself is too
-            // wide, split that word across lines instead of truncating it.
             int breakAt = lastSpace > 0 ? lastSpace : bestBreak;
             if (breakAt <= 0) {
                 breakAt = 1;
@@ -174,7 +191,6 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
             remaining = remaining.substring(breakAt).trim();
         }
 
-        // If the reason still does not fit, mark the final visible line.
         if (!remaining.isEmpty() && !result.isEmpty()) {
             int lastIndex = result.size() - 1;
             String last = result.get(lastIndex);
@@ -188,5 +204,4 @@ public class HeadstoneRenderer implements BlockEntityRenderer<HeadstoneBlockEnti
 
         return result;
     }
-
 }

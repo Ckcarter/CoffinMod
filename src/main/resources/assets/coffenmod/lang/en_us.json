@@ -3,6 +3,6 @@
   "block.coffenmod.stone_coffin": "Stone Coffin",
   "block.coffenmod.wood_coffin": "Wooden Coffin",
   "entity.coffenmod.ghost": "Ghost",
-  "block.coffenmod.headstone": "Headstone",
-  "item.coffenmod.headstone": "Headstone"
+  "block.coffenmod.headstone": "Wide Headstone",
+  "item.coffenmod.headstone": "Wide Headstone"
 }
