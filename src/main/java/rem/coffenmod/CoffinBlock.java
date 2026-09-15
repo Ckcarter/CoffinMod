@@ -31,6 +31,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
 import org.jetbrains.annotations.Nullable;
+import java.util.List;
+import java.util.Collections;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.LootParams;
 
 public class CoffinBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -60,7 +64,12 @@ public class CoffinBlock extends BaseEntityBlock {
         BlockPos head=pos.relative(state.getValue(FACING)); level.setBlock(head,state.setValue(PART,CoffinPart.HEAD),3);
         if(level.getBlockEntity(pos) instanceof CoffinBlockEntity be){
             be.setCoffinType(coffinType);
-            if(stack.hasTag() && stack.getTag().contains("pname")) be.setOwnerName(stack.getTag().getString("pname"));
+
+            if (stack.hasTag() && stack.getTag().contains("CoffinData")) {
+                be.loadCoffinItemData(stack.getTag().getCompound("CoffinData"));
+            } else if(stack.hasTag() && stack.getTag().contains("pname")) {
+                be.setOwnerName(stack.getTag().getString("pname"));
+            }
         }
     }
 
@@ -123,4 +132,21 @@ public class CoffinBlock extends BaseEntityBlock {
     @Nullable @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type){
         return state.getValue(PART)==CoffinPart.FOOT && type==Coffenmod.COFFIN_BLOCK_ENTITY.get() ? (l,p,s,b)->CoffinBlockEntity.tick(l,p,s,(CoffinBlockEntity)b) : null;
     }
+
+    @Override
+    public List<ItemStack> getDrops(BlockState state, LootParams.Builder builder) {
+        if (state.getValue(PART) != CoffinPart.FOOT) {
+            return Collections.emptyList();
+        }
+
+        ItemStack dropped = new ItemStack(this);
+        BlockEntity blockEntity = builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);
+
+        if (blockEntity instanceof CoffinBlockEntity coffin) {
+            dropped.getOrCreateTag().put("CoffinData", coffin.saveCoffinItemData());
+        }
+
+        return Collections.singletonList(dropped);
+    }
+
 }

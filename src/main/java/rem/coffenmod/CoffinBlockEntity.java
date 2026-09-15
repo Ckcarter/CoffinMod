@@ -342,6 +342,45 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
         if (level != null) level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
     }
 
+
+    public CompoundTag saveCoffinItemData() {
+        CompoundTag tag = new CompoundTag();
+        tag.putString("Pname", ownerName);
+        tag.putInt("type", coffinType);
+
+        ListTag list = new ListTag();
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.get(i);
+            if (!stack.isEmpty()) {
+                CompoundTag itemTag = new CompoundTag();
+                itemTag.putByte("Slot", (byte) i);
+                stack.save(itemTag);
+                list.add(itemTag);
+            }
+        }
+        tag.put("Inventory", list);
+        return tag;
+    }
+
+    public void loadCoffinItemData(CompoundTag tag) {
+        if (tag.contains("Pname")) ownerName = tag.getString("Pname");
+        if (tag.contains("type")) coffinType = tag.getInt("type");
+
+        clearContent();
+
+        if (tag.contains("Inventory", Tag.TAG_LIST)) {
+            ListTag list = tag.getList("Inventory", Tag.TAG_COMPOUND);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag itemTag = list.getCompound(i);
+                int slot = itemTag.getByte("Slot") & 255;
+                if (slot >= 0 && slot < inventory.size()) {
+                    inventory.set(slot, ItemStack.of(itemTag));
+                }
+            }
+        }
+        sync();
+    }
+
     @Override protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putString("Pname", ownerName);
