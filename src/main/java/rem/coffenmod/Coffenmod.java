@@ -35,9 +35,9 @@ public class Coffenmod {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
     public static final RegistryObject<Block> STONE_COFFIN = BLOCKS.register("stone_coffin", () ->
-            new CoffinBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.0F, 6.0F).noOcclusion().sound(SoundType.STONE), 0));
+            new CoffinBlock(BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(3.0F, 6.0F).requiresCorrectToolForDrops().noOcclusion().sound(SoundType.STONE), 0));
     public static final RegistryObject<Block> WOOD_COFFIN = BLOCKS.register("wood_coffin", () ->
-            new CoffinBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 3.0F).noOcclusion().sound(SoundType.WOOD), 1));
+            new CoffinBlock(BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(2.0F, 3.0F).requiresCorrectToolForDrops().noOcclusion().sound(SoundType.WOOD), 1));
 
     public static final RegistryObject<Block> HEADSTONE = BLOCKS.register("headstone", () ->
             new HeadstoneBlock(

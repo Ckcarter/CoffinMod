@@ -86,7 +86,7 @@ public class CoffinBlock extends BaseEntityBlock {
         }
 
         // Keep the existing shift-right-click editor.
-        if (player.isShiftKeyDown()) {
+        if (player.isShiftKeyDown() && player.getAbilities().instabuild) {
             if (level.isClientSide) {
                 DistExecutor.unsafeRunWhenOn(
                         Dist.CLIENT,
@@ -100,11 +100,11 @@ public class CoffinBlock extends BaseEntityBlock {
             // Open the coffin lid.
             be.toggleLid(findOpenDirection(level, foot, footState.getValue(FACING)));
 
-            // Open a real 27-slot coffin inventory.
+            // Open a 54-slot coffin inventory.
             if (player instanceof ServerPlayer serverPlayer) {
                 serverPlayer.openMenu(new SimpleMenuProvider(
                         (containerId, playerInventory, menuPlayer) ->
-                                ChestMenu.threeRows(containerId, playerInventory, be),
+                                ChestMenu.sixRows(containerId, playerInventory, be),
                         Component.literal("Coffin")
                 ));
             }

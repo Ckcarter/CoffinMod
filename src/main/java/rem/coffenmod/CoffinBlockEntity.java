@@ -30,7 +30,7 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
     private GameProfile ownerProfile;
     private boolean spawnGhost = false;
     private int coffinType;
-    private final NonNullList<ItemStack> inventory = NonNullList.withSize(36, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> inventory = NonNullList.withSize(54, ItemStack.EMPTY);
 
     // Original 1.7.10 TESR animation state.
     public boolean closed = false; // false = lid shut; true = opening/open, matching old field behavior
@@ -86,6 +86,18 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
                 return;
             }
         }
+    }
+
+    public void setStoredStacks(java.util.Collection<ItemStack> stacks) {
+        clearContent();
+        int slot = 0;
+        for (ItemStack stack : stacks) {
+            if (slot >= inventory.size()) break;
+            if (!stack.isEmpty()) {
+                inventory.set(slot++, stack.copy());
+            }
+        }
+        sync();
     }
 
     public void setStoredDrops(java.util.Collection<net.minecraft.world.entity.item.ItemEntity> drops) {
