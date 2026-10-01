@@ -41,8 +41,10 @@ public class CoffinEvents {
         if (surface == null) return;
 
         Direction coffinFacing = facing.getOpposite();
-        BlockPos coffinFoot = surface.relative(coffinFacing).below(3);
-        BlockPos coffinHead = surface.relative(coffinFacing, 2).below(3);
+        // Bury the coffin one block deeper. Keep the surface/death position just
+        // beyond the HEAD end so Gravestone's marker appears at the front of the coffin.
+        BlockPos coffinHead = surface.relative(coffinFacing.getOpposite()).below(4);
+        BlockPos coffinFoot = surface.relative(coffinFacing.getOpposite(), 2).below(4);
         if (coffinFoot.getY() <= level.getMinBuildHeight() || coffinHead.getY() <= level.getMinBuildHeight()) return;
 
         int type = player.getRandom().nextBoolean() ? 0 : 1;
@@ -110,8 +112,10 @@ public class CoffinEvents {
          * graves from spawning in normal dirt and stone.
          */
         Direction coffinFacing = facing.getOpposite();
-        BlockPos coffinFoot = surface.relative(coffinFacing).below(3);
-        BlockPos coffinHead = surface.relative(coffinFacing, 2).below(3);
+        // Bury the coffin one block deeper. Keep the surface/death position just
+        // beyond the HEAD end so Gravestone's marker appears at the front of the coffin.
+        BlockPos coffinHead = surface.relative(coffinFacing.getOpposite()).below(4);
+        BlockPos coffinFoot = surface.relative(coffinFacing.getOpposite(), 2).below(4);
 
         if (coffinFoot.getY() <= level.getMinBuildHeight()
                 || coffinHead.getY() <= level.getMinBuildHeight()) {
@@ -179,7 +183,7 @@ public class CoffinEvents {
                                         String playerName,
                                         String deathReason) {
 
-        BlockPos headstonePos = coffinHead.above(3).relative(coffinFacing);
+        BlockPos headstonePos = coffinHead.above(4).relative(coffinFacing);
 
         BlockState headstoneState = Coffenmod.HEADSTONE.get()
                 .defaultBlockState()
