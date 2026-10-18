@@ -88,18 +88,6 @@ public class CoffinBlockEntity extends BlockEntity implements Container {
         }
     }
 
-    public void setStoredStacks(java.util.Collection<ItemStack> stacks) {
-        clearContent();
-        int slot = 0;
-        for (ItemStack stack : stacks) {
-            if (slot >= inventory.size()) break;
-            if (!stack.isEmpty()) {
-                inventory.set(slot++, stack.copy());
-            }
-        }
-        sync();
-    }
-
     public void setStoredDrops(java.util.Collection<net.minecraft.world.entity.item.ItemEntity> drops) {
         clearContent();
         int slot = 0;

@@ -61,12 +61,3 @@ mandatory = true
 versionRange = "${minecraft_version_range}"
 ordering = "NONE"
 side = "BOTH"
-
-# Optional Gravestone integration — any installed version is accepted.
-# When present, Gravestone owns the visible death marker while Coffin Mod owns inventory storage.
-[[dependencies."${mod_id}"]]
-modId = "gravestone"
-mandatory = false
-versionRange = "[0,)"
-ordering = "AFTER"
-side = "BOTH"
